@@ -283,7 +283,6 @@ function createRandomDots() {
         dotsFound++;
         updateDotCounter();
         if (dotsFound === NUM_DOTS) {
-          document.body.classList.add('blue-accent');
           showResumeModal();
         }
       }
@@ -298,12 +297,12 @@ function updateDotCounter() {
   const counter = document.getElementById('dot-counter');
   if (counter) {
     counter.textContent = `${dotsFound}/${NUM_DOTS}`;
-    counter.style.display = 'block'; // Ensure always visible
+    counter.style.display = 'block';
   }
   if (dotsFound === NUM_DOTS && !moodModeActive) {
     moodModeActive = true;
-    document.body.classList.remove('blue-accent'); // Remove blue accent override
-    pollEmotion(); // Start mood-based color changing
+    document.body.classList.remove('blue-accent');
+    setupFaceAPI(); // Start browser-based mood detection
   }
 }
 
@@ -318,9 +317,9 @@ const emotionSchemes = {
   sad:      { accent: "#2196F3", bg: "#E3F2FD", text: "#222" },
   angry:    { accent: "#F44336", bg: "#FFEBEE", text: "#222" },
   neutral:  { accent: "#9E9E9E", bg: "#212121", text: "#fff" },
-  surprise: { accent: "#FF9800", bg: "#FFF3E0", text: "#222" },
-  fear:     { accent: "#673AB7", bg: "#EDE7F6", text: "#222" },
-  disgust:  { accent: "#4CAF50", bg: "#E8F5E9", text: "#222" }
+  surprised: { accent: "#FF9800", bg: "#FFF3E0", text: "#222" },
+  fearful:     { accent: "#673AB7", bg: "#EDE7F6", text: "#222" },
+  disgusted:  { accent: "#4CAF50", bg: "#E8F5E9", text: "#222" }
 };
 
 function setColorScheme(scheme) {
@@ -343,23 +342,34 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-async function pollEmotion() {
-  try {
-    const res = await fetch('http://localhost:5050/emotion');
-    const emotion = await res.text();
-    const scheme = emotionSchemes[emotion.trim().toLowerCase()] || emotionSchemes.happy;
-    if (themeChangingEnabled) setColorScheme(scheme);
-    // Show and update the emotion dialog
-    const dialog = document.getElementById('emotion-dialog');
-    const value = document.getElementById('emotion-value');
-    if (dialog && value) {
-      dialog.style.display = 'flex';
-      value.textContent = emotion.trim();
+// 2. Setup face-api.js and webcam
+async function setupFaceAPI() {
+  await faceapi.nets.tinyFaceDetector.loadFromUri('/models/tiny_face_detector');
+  await faceapi.nets.faceExpressionNet.loadFromUri('/models/face_expression');
+  const video = document.getElementById('moodcam');
+  navigator.mediaDevices.getUserMedia({ video: {} })
+    .then(stream => { video.srcObject = stream; });
+  video.onplay = () => detectMood(video);
+}
+
+// 3. Detect mood every 8 seconds
+async function detectMood(video) {
+  setInterval(async () => {
+    const detections = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions()).withFaceExpressions();
+    if (detections && detections.expressions) {
+      const sorted = Object.entries(detections.expressions).sort((a, b) => b[1] - a[1]);
+      const mood = sorted[0][0];
+      const scheme = emotionSchemes[mood] || emotionSchemes.happy;
+      if (themeChangingEnabled) setColorScheme(scheme);
+      // Update your dialog, etc.
+      const dialog = document.getElementById('emotion-dialog');
+      const value = document.getElementById('emotion-value');
+      if (dialog && value) {
+        dialog.style.display = 'flex';
+        value.textContent = mood;
+      }
     }
-  } catch (e) {
-    // Optionally handle error
-  }
-  setTimeout(pollEmotion, 8000); // poll every 8 seconds
+  }, 8000); // every 8 seconds
 }
 
 // Hide the dialog initially
@@ -368,4 +378,27 @@ window.addEventListener('DOMContentLoaded', () => {
   if (dialog) dialog.style.display = 'none';
 });
 
-// pollEmotion(); 
+// FaceAPI test button logic
+window.addEventListener('DOMContentLoaded', () => {
+  const testBtn = document.getElementById('test-faceapi-btn');
+  if (testBtn) {
+    testBtn.addEventListener('click', async () => {
+      await faceapi.nets.tinyFaceDetector.loadFromUri('/face-api.js/weights');
+      await faceapi.nets.faceExpressionNet.loadFromUri('/face-api.js/weights');
+      console.log('Models loaded from /face-api.js/weights');
+      const video = document.getElementById('moodcam');
+      navigator.mediaDevices.getUserMedia({ video: {} })
+        .then(stream => { video.srcObject = stream; });
+      video.onplay = () => {
+        setInterval(async () => {
+          const detections = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions()).withFaceExpressions();
+          if (detections && detections.expressions) {
+            const sorted = Object.entries(detections.expressions).sort((a, b) => b[1] - a[1]);
+            const mood = sorted[0][0];
+            alert('Detected mood: ' + mood);
+          }
+        }, 5000); // every 5 seconds
+      };
+    });
+  }
+}); 
