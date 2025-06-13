@@ -282,6 +282,7 @@ function createRandomDots() {
         dot.classList.add('found');
         dotsFound++;
         updateDotCounter();
+        dot.remove(); // Remove the dot from the DOM when found
         if (dotsFound === NUM_DOTS) {
           showResumeModal();
         }
@@ -302,7 +303,8 @@ function updateDotCounter() {
   if (dotsFound === NUM_DOTS && !moodModeActive) {
     moodModeActive = true;
     document.body.classList.remove('blue-accent');
-    setupFaceAPI(); // Start browser-based mood detection
+    console.log('All dots collected! Starting mood detection...');
+    setupFaceAPI(); // Start browser-based mood detection and color changing
   }
 }
 
@@ -323,6 +325,8 @@ const emotionSchemes = {
 };
 
 function setColorScheme(scheme) {
+  // Add smooth transition for color changes
+  document.documentElement.style.transition = 'background 0.8s, color 0.8s, border-color 0.8s, box-shadow 0.8s, filter 0.8s, outline 0.8s, text-shadow 0.8s, --accent 0.8s, --bg-dark 0.8s, --bg-light 0.8s, --text-primary 0.8s, --text-secondary 0.8s';
   document.documentElement.style.setProperty('--accent', scheme.accent);
   document.documentElement.style.setProperty('--bg-dark', scheme.bg);
   document.documentElement.style.setProperty('--bg-light', scheme.bg);
@@ -344,23 +348,47 @@ window.addEventListener('DOMContentLoaded', () => {
 
 // 2. Setup face-api.js and webcam
 async function setupFaceAPI() {
-  await faceapi.nets.tinyFaceDetector.loadFromUri('/models/tiny_face_detector');
-  await faceapi.nets.faceExpressionNet.loadFromUri('/models/face_expression');
+  const MODEL_URL = '/face-api.js/weights';
+  await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+  await faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL);
   const video = document.getElementById('moodcam');
   navigator.mediaDevices.getUserMedia({ video: {} })
-    .then(stream => { video.srcObject = stream; });
-  video.onplay = () => detectMood(video);
+    .then(stream => {
+      video.srcObject = stream;
+      console.log('Webcam stream set on video element.');
+    })
+    .catch(err => {
+      console.error('Error accessing webcam:', err);
+    });
+  video.onloadedmetadata = () => {
+    console.log('Video metadata loaded, attempting to play...');
+    video.play();
+  };
+  video.onplay = () => {
+    console.log('Video element started playing, running detectMood...');
+    detectMood(video);
+  };
+  video.oncanplay = () => {
+    console.log('Video can play!');
+  };
+  video.onplaying = () => {
+    console.log('Video is playing!');
+  };
 }
 
 // 3. Detect mood every 8 seconds
 async function detectMood(video) {
   setInterval(async () => {
+    console.log('Running face detection...');
     const detections = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions()).withFaceExpressions();
-    if (detections && detections.expressions) {
+    if (!detections) {
+      console.log('No face detected.');
+    } else if (detections && detections.expressions) {
+      console.log('Mood detected:', detections.expressions);
       const sorted = Object.entries(detections.expressions).sort((a, b) => b[1] - a[1]);
       const mood = sorted[0][0];
       const scheme = emotionSchemes[mood] || emotionSchemes.happy;
-      if (themeChangingEnabled) setColorScheme(scheme);
+      if (themeChangingEnabled && moodModeActive) setColorScheme(scheme);
       // Update your dialog, etc.
       const dialog = document.getElementById('emotion-dialog');
       const value = document.getElementById('emotion-value');
@@ -383,8 +411,9 @@ window.addEventListener('DOMContentLoaded', () => {
   const testBtn = document.getElementById('test-faceapi-btn');
   if (testBtn) {
     testBtn.addEventListener('click', async () => {
-      await faceapi.nets.tinyFaceDetector.loadFromUri('/face-api.js/weights');
-      await faceapi.nets.faceExpressionNet.loadFromUri('/face-api.js/weights');
+      const MODEL_URL = '/face-api.js/weights';
+      await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+      await faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL);
       console.log('Models loaded from /face-api.js/weights');
       const video = document.getElementById('moodcam');
       navigator.mediaDevices.getUserMedia({ video: {} })
