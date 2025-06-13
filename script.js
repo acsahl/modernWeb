@@ -344,8 +344,9 @@ window.addEventListener('DOMContentLoaded', () => {
 
 // 2. Setup face-api.js and webcam
 async function setupFaceAPI() {
-  await faceapi.nets.tinyFaceDetector.loadFromUri('/models/tiny_face_detector');
-  await faceapi.nets.faceExpressionNet.loadFromUri('/models/face_expression');
+  const MODEL_URL = 'https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/weights';
+  await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+  await faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL);
   const video = document.getElementById('moodcam');
   navigator.mediaDevices.getUserMedia({ video: {} })
     .then(stream => { video.srcObject = stream; });
@@ -383,9 +384,10 @@ window.addEventListener('DOMContentLoaded', () => {
   const testBtn = document.getElementById('test-faceapi-btn');
   if (testBtn) {
     testBtn.addEventListener('click', async () => {
-      await faceapi.nets.tinyFaceDetector.loadFromUri('/face-api.js/weights');
-      await faceapi.nets.faceExpressionNet.loadFromUri('/face-api.js/weights');
-      console.log('Models loaded from /face-api.js/weights');
+      const MODEL_URL = 'https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/weights';
+      await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+      await faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL);
+      console.log('Models loaded from CDN');
       const video = document.getElementById('moodcam');
       navigator.mediaDevices.getUserMedia({ video: {} })
         .then(stream => { video.srcObject = stream; });
