@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pacman Modern UI</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- GSAP -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+    <!-- Locomotive Scroll -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/locomotive-scroll@4.1.4/dist/locomotive-scroll.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/locomotive-scroll@4.1.4/dist/locomotive-scroll.min.js"></script>
+    <!-- Three.js for 3D Pacman -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.153.0/build/three.min.js"></script>
+    <!-- Three-CSGMesh for Boolean operations -->
+    <script src="https://cdn.jsdelivr.net/npm/three-csgmesh@1.0.2/build/three-csgmesh.umd.js"></script>
+</head>
+<body>
+    <div class="cursor"></div>
+    <div class="cursor-follower"></div>
+    <div class="maze-background"></div>
+
+    <!-- Floating Icon Menu -->
+    <nav class="floating-menu">
+        <a href="#about-me" title="About Me" class="menu-icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="4"/><path d="M5.5 21a8.38 8.38 0 0 1 13 0"/></svg>
+        </a>
+        <a href="#projects" title="Projects" class="menu-icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="13" width="7" height="8"/><rect x="14" y="3" width="7" height="18"/></svg>
+        </a>
+    </nav>
+
+    <main data-scroll-container>
+        <section class="hero" data-scroll-section>
+            <div class="container">
+                <div class="pacman-wrapper">
+                    <div id="pacman-3d-container" style="width: 200px; height: 200px; margin: 0 auto;"></div>
+                </div>
+                <h1 class="reveal-text">Acsah Lukose</h1>
+                <p class="reveal-text">If you collect all 10 dots, I'll match your mood :)</p>
+            </div>
+        </section>
+
+        <section class="about" id="about-me" data-scroll-section>
+            <div class="container">
+                <h2 class="reveal-text">About Me</h2>
+                <div class="content">
+                    <p class="reveal-text">My name is Acsah Lukose, and I'm a rising Junior majoring in Computer Science
+                         at the University of Central Florida. I have a passion 
+                        for software and web development, and I'm excited to learn more about AI and the cloud!</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="features" id="projects" data-scroll-section>
+            <div class="container">
+                <h2 class="reveal-text">Projects</h2>
+                <div class="feature-grid">
+                    <div class="feature-item reveal-text">
+                        <div class="ghost ghost-pink"></div>
+                        <h3>Ghosts</h3>
+                        <p>Four ghosts with unique behaviors</p>
+                    </div>
+                    <div class="feature-item reveal-text">
+                        <div class="power-pellet"></div>
+                        <h3>Power Pellets</h3>
+                        <p>Turn the tables on the ghosts</p>
+                    </div>
+                    <div class="feature-item reveal-text">
+                        <div class="dot"></div>
+                        <h3>Dots</h3>
+                        <p>Collect them all to win</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <div id="emotion-dialog" class="emotion-dialog" style="display:none;">
+      Mood: <span id="emotion-value">neutral</span>
+      <div id="theme-toggle" class="theme-toggle" title="Pause theme changing">
+        <span id="theme-toggle-icon">⏸️</span>
+      </div>
+    </div>
+    <div id="dot-counter">0/10</div>
+
+    <script src="script.js"></script>
+</body>
+</html> 
